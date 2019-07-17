@@ -1,11 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 
+import AuthContext from '../context/auth-context';
 import './Auth.css';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const emailEl = useRef(null);
   const passwordEl = useRef(null);
+  const value = useContext(AuthContext);
 
   const submitHandler = event => {
     event.preventDefault();
@@ -54,8 +56,14 @@ export default function AuthPage() {
         }
         return res.json();
       })
-      .then(data => {
-        console.log(data);
+      .then(resData => {
+        if (resData.data.login.token) {
+          value.login(
+            resData.data.login.userId,
+            resData.data.login.token,
+            resData.data.login.tokenExpiration,
+          );
+        }
       })
       .catch(err => console.log(err));
   };
