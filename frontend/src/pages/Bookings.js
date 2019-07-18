@@ -55,13 +55,16 @@ export default function BookingsPage() {
   const cancelBookingHandler = bookingId => {
     const requestQuery = {
       query: `
-        mutation {
-          cancelBooking(bookingId: "${bookingId}") {
+        mutation CancelBooking($bookingId: ID!){
+          cancelBooking(bookingId: $bookingId) {
             _id
             title
           }
         }
       `,
+      variables: {
+        bookingId,
+      },
     };
     // request to the backend
     fetch('http://localhost:8000/graphql', {
