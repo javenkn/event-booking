@@ -4,10 +4,14 @@ import Modal from '../components/Modal';
 import Backdrop from '../components/Backdrop';
 import AuthContext from '../context/auth-context';
 import './Events.css';
+import EventList from '../components/EventList';
+import Spinner from '../components/Spinner';
 
 export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [creating, setCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const titleEl = useRef(null);
   const priceEl = useRef(null);
   const dateEl = useRef(null);
@@ -29,9 +33,6 @@ export default function EventsPage() {
       return;
     }
 
-    const event = { title, price, date, description };
-    console.log(event);
-
     const requestQuery = {
       query: `
         mutation {
@@ -41,10 +42,6 @@ export default function EventsPage() {
             description
             price
             date
-            creator {
-              _id
-              email
-            }
           }
         }
       `,
@@ -64,13 +61,19 @@ export default function EventsPage() {
         }
         return res.json();
       })
-      .then(resData => fetchEvents())
+      .then(resData =>
+        setEvents([
+          ...events,
+          { ...resData.data.createEvent, creator: { _id: value.userId } },
+        ]),
+      )
       .catch(err => console.log(err));
 
     setCreating(false);
   };
 
   const fetchEvents = () => {
+    setIsLoading(true);
     const requestQuery = {
       query: `
         query {
@@ -105,9 +108,20 @@ export default function EventsPage() {
       .then(resData => {
         const { events } = resData.data;
         setEvents(events);
+        setIsLoading(false);
       })
-      .catch(err => console.log(err));
+      .catch(err => {
+        console.log(err);
+        setIsLoading(false);
+      });
   };
+
+  const showDetailHandler = eventId => {
+    const clickedEvent = events.find(event => event._id === eventId);
+    setSelectedEvent(clickedEvent);
+  };
+
+  const bookEventHandler = () => {};
 
   useEffect(() => {
     fetchEvents();
@@ -115,7 +129,7 @@ export default function EventsPage() {
 
   return (
     <>
-      {creating && <Backdrop />}
+      {(creating || selectedEvent) && <Backdrop />}
       {creating && (
         <Modal
           title='Add Event'
@@ -123,6 +137,7 @@ export default function EventsPage() {
           canConfirm
           onCancel={() => setCreating(false)}
           onConfirm={eventConfirmHandler}
+          confirmText='Confirm'
         >
           <form>
             <div className='form-control'>
@@ -144,6 +159,26 @@ export default function EventsPage() {
           </form>
         </Modal>
       )}
+      {selectedEvent && (
+        <Modal
+          title='Book Event'
+          canCancel
+          canConfirm
+          onCancel={() => {
+            setCreating(false);
+            setSelectedEvent(false);
+          }}
+          onConfirm={bookEventHandler}
+          confirmText='Book'
+        >
+          <h1>{selectedEvent.title}</h1>
+          <h2>
+            ${selectedEvent.price} -{' '}
+            {new Date(selectedEvent.date).toLocaleDateString()}
+          </h2>
+          <p>{selectedEvent.description}</p>
+        </Modal>
+      )}
       {value.token && (
         <div className='events-control'>
           <p>Share your own events!</p>
@@ -152,13 +187,15 @@ export default function EventsPage() {
           </button>
         </div>
       )}
-      <ul className='events__list'>
-        {events.map(event => (
-          <li key={event._id} className='events__list-item'>
-            {event.title}
-          </li>
-        ))}
-      </ul>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <EventList
+          events={events}
+          authUserId={value.userId}
+          onViewDetail={showDetailHandler}
+        />
+      )}
     </>
   );
 }

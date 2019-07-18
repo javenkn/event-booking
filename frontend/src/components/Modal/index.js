@@ -9,6 +9,7 @@ export default function Modal({
   canCancel,
   onConfirm,
   onCancel,
+  confirmText,
 }) {
   return (
     <div className='modal'>
@@ -17,7 +18,7 @@ export default function Modal({
       <section className='modal__actions'>
         {canConfirm && (
           <button className='btn' onClick={onConfirm}>
-            Confirm
+            {confirmText}
           </button>
         )}
         {canCancel && (
