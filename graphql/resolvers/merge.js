@@ -13,6 +13,11 @@ const userLoader = new DataLoader(userIds =>
 const events = async eventIds => {
   try {
     const events = await Event.find({ _id: { $in: eventIds } });
+    events.sort(
+      // sorts the events based on the order of eventIds that DataLoader sends us
+      (a, b) =>
+        eventIds.indexOf(a._id.toString()) - eventIds.indexOf(b._id.toString()),
+    );
     return events.map(event => transformEvent(event));
   } catch (error) {
     throw error;
