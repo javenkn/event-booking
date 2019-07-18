@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import AuthContext from '../../context/auth-context';
-import './MainNavigation.css';
+import './index.css';
 
 export default function MainNavigation() {
   const value = useContext(AuthContext);
@@ -22,9 +22,14 @@ export default function MainNavigation() {
             <NavLink to='/events'>Events</NavLink>
           </li>
           {value.token && (
-            <li>
-              <NavLink to='/bookings'>Bookings</NavLink>
-            </li>
+            <>
+              <li>
+                <NavLink to='/bookings'>Bookings</NavLink>
+              </li>
+              <li>
+                <button onClick={value.logout}>Logout</button>
+              </li>
+            </>
           )}
         </ul>
       </div>
