@@ -121,7 +121,43 @@ export default function EventsPage() {
     setSelectedEvent(clickedEvent);
   };
 
-  const bookEventHandler = () => {};
+  const bookEventHandler = () => {
+    if (!value.token) {
+      setSelectedEvent(null);
+      return;
+    }
+    const requestQuery = {
+      query: `
+        mutation {
+          bookEvent(eventId: "${selectedEvent._id}") {
+            _id
+            createdAt
+            updatedAt
+          }
+        }
+      `,
+    };
+    // request to the backend
+    fetch('http://localhost:8000/graphql', {
+      method: 'POST',
+      body: JSON.stringify(requestQuery),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${value.token}`,
+      },
+    })
+      .then(res => {
+        if (res.status !== 200 && res.status !== 201) {
+          throw new Error('Failed.');
+        }
+        return res.json();
+      })
+      .then(resData => {
+        console.log(resData);
+        setSelectedEvent(null);
+      })
+      .catch(err => console.log(err));
+  };
 
   useEffect(() => {
     fetchEvents();
@@ -169,7 +205,7 @@ export default function EventsPage() {
             setSelectedEvent(false);
           }}
           onConfirm={bookEventHandler}
-          confirmText='Book'
+          confirmText={value.token ? 'Book' : 'Confirm'}
         >
           <h1>{selectedEvent.title}</h1>
           <h2>
