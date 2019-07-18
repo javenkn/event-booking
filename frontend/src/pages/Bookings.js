@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 
 import Spinner from '../components/Spinner';
 import AuthContext from '../context/auth-context';
+import BookingList from '../components/BookingList';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
@@ -51,6 +52,38 @@ export default function BookingsPage() {
       });
   };
 
+  const cancelBookingHandler = bookingId => {
+    const requestQuery = {
+      query: `
+        mutation {
+          cancelBooking(bookingId: "${bookingId}") {
+            _id
+            title
+          }
+        }
+      `,
+    };
+    // request to the backend
+    fetch('http://localhost:8000/graphql', {
+      method: 'POST',
+      body: JSON.stringify(requestQuery),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${value.token}`,
+      },
+    })
+      .then(res => {
+        if (res.status !== 200 && res.status !== 201) {
+          throw new Error('Failed.');
+        }
+        return res.json();
+      })
+      .then(() => {
+        setBookings(bookings.filter(booking => booking._id !== bookingId));
+      })
+      .catch(err => console.log(err));
+  };
+
   useEffect(() => {
     fetchBookings();
   }, []);
@@ -60,14 +93,10 @@ export default function BookingsPage() {
       {isLoading ? (
         <Spinner />
       ) : (
-        <ul>
-          {bookings.map(booking => (
-            <li key={booking._id}>
-              {booking.event.title} -{' '}
-              {new Date(booking.createdAt).toLocaleDateString()}
-            </li>
-          ))}
-        </ul>
+        <BookingList
+          bookings={bookings}
+          onCancelBooking={cancelBookingHandler}
+        />
       )}
     </>
   );
