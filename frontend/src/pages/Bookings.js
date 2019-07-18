@@ -3,10 +3,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import Spinner from '../components/Spinner';
 import AuthContext from '../context/auth-context';
 import BookingList from '../components/BookingList';
+import BookingTabs from '../components/BookingTabs';
+import Chart from '../components/Chart';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [tabName, setTabName] = useState('list');
   const value = useContext(AuthContext);
 
   const fetchBookings = () => {
@@ -21,6 +24,7 @@ export default function BookingsPage() {
               _id
               title
               date
+              price
             }
           }
         }
@@ -87,6 +91,10 @@ export default function BookingsPage() {
       .catch(err => console.log(err));
   };
 
+  const changeTabHandler = tabName => {
+    return tabName === 'list' ? setTabName('list') : setTabName('chart');
+  };
+
   useEffect(() => {
     fetchBookings();
   }, []);
@@ -96,10 +104,22 @@ export default function BookingsPage() {
       {isLoading ? (
         <Spinner />
       ) : (
-        <BookingList
-          bookings={bookings}
-          onCancelBooking={cancelBookingHandler}
-        />
+        <>
+          <BookingTabs
+            activeTab={tabName}
+            changeTabHandler={changeTabHandler}
+          />
+          <div>
+            {tabName === 'list' ? (
+              <BookingList
+                bookings={bookings}
+                onCancelBooking={cancelBookingHandler}
+              />
+            ) : (
+              <Chart bookings={bookings} />
+            )}
+          </div>
+        </>
       )}
     </>
   );
